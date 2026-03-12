@@ -13,10 +13,20 @@ class RouteController extends Controller
         $request->validate([
             'from' => 'required|string', // format: lat,lng
             'to' => 'required|string',   // format: lat,lng
+            'profile' => 'nullable|string|in:driving,walking,cycling',
         ]);
 
         $from = explode(',', $request->input('from'));
         $to = explode(',', $request->input('to'));
+        $profile = $request->input('profile', 'driving');
+
+        // Map 'walking' to OSRM 'foot' if needed, but 'foot' is standard on demo server usually
+        // Actually, the public OSRM server supports: car (driving), bike (cycling), foot (walking)
+        $osrmProfile = match ($profile) {
+            'walking' => 'foot',
+            'cycling' => 'bike',
+            default => 'driving', // 'car' on some servers but 'driving' is standard in API v1
+        };
 
         if (count($from) !== 2 || count($to) !== 2) {
             return response()->json(['error' => 'Invalid coordinates format. Use lat,lng'], 400);
@@ -31,7 +41,7 @@ class RouteController extends Controller
         $coords = "{$lng1},{$lat1};{$lng2},{$lat2}";
         $baseUrl = env('OSRM_BASE_URL', 'http://router.project-osrm.org');
         
-        $url = "{$baseUrl}/route/v1/driving/{$coords}?overview=full&geometries=geojson";
+        $url = "{$baseUrl}/route/v1/{$osrmProfile}/{$coords}?overview=full&geometries=geojson";
 
         try {
             $response = Http::get($url);

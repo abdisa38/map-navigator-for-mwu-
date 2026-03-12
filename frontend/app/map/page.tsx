@@ -77,7 +77,7 @@ export default function Home() {
     fetchBuildings();
   }, [selectedCategory, searchQuery]);
 
-  const handleNavigate = async () => {
+  const handleNavigate = async (mode: 'driving' | 'walking' | 'cycling' = 'driving') => {
     if (!selectedBuilding) return;
     
     setIsNavigating(true);
@@ -95,7 +95,8 @@ export default function Home() {
           // In real OSRM, we need start and end points
           const response = await getRoute(
              [latitude, longitude], 
-             [selectedBuilding.latitude, selectedBuilding.longitude]
+             [selectedBuilding.latitude, selectedBuilding.longitude],
+             mode
           );
 
           if (response.routes && response.routes.length > 0) {
@@ -206,7 +207,7 @@ export default function Home() {
         <BuildingDetails 
             building={selectedBuilding} 
             onClose={() => setSelectedBuilding(null)}
-            onNavigate={handleNavigate}
+            onNavigate={(mode: 'driving' | 'walking' | 'cycling' = 'driving') => handleNavigate(mode)}
             isNavigating={isNavigating}
         />
       </div>

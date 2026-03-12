@@ -56,11 +56,12 @@ export const getCampusBoundary = async (): Promise<CampusBoundary> => {
   return data;
 };
 
-export const getRoute = async (from: [number, number], to: [number, number]): Promise<RouteResponse> => {
+export const getRoute = async (from: [number, number], to: [number, number], profile: 'driving' | 'walking' | 'cycling' = 'driving'): Promise<RouteResponse> => {
   const { data } = await API.get('/route', {
     params: {
       from: `${from[0]},${from[1]}`, // lat,lng
       to: `${to[0]},${to[1]}`,
+      profile, // Add profile param
     },
   });
   return data;
