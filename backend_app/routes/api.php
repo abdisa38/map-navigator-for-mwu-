@@ -32,7 +32,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // Admin Routes
     Route::middleware('can:admin')->group(function () {
         Route::get('/stats', [DashboardController::class, 'stats']);
+        
+        // User CRUD
         Route::get('/users', [UserController::class, 'index']);
+        Route::post('/users', [UserController::class, 'store']);
+        Route::put('/users/{id}', [UserController::class, 'update']);
+        Route::delete('/users/{id}', [UserController::class, 'destroy']);
+        
         Route::post('/buildings', [BuildingController::class, 'store']);
         Route::put('/buildings/{id}', [BuildingController::class, 'update']);
         Route::delete('/buildings/{id}', [BuildingController::class, 'destroy']);

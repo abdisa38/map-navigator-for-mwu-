@@ -76,4 +76,18 @@ export const getUsers = async () => {
   return data;
 };
 
+export const createUser = async (userData: any): Promise<any> => {
+    const { data } = await API.post('/users', userData);
+    return data;
+};
+
+export const updateUser = async (id: number, userData: any): Promise<any> => {
+    const { data } = await API.put(`/users/${id}`, userData);
+    return data;
+};
+
+export const deleteUser = async (id: number): Promise<void> => {
+    await API.delete(`/users/${id}`);
+};
+
 
