@@ -18,7 +18,7 @@ export default function AdminLayout({
     const userRole = localStorage.getItem('user_role');
 
     if (!token || userRole !== 'admin') {
-      router.push('/login');
+      router.push('/admin/login');
     } else {
       setIsAdmin(true);
     }
