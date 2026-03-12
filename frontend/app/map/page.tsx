@@ -20,7 +20,8 @@ const MapView = dynamic(() => import('@/components/Map/MapView'), {
 
 export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [buildings, setBuildings] = useState<Building[]>([]);
+  const [allBuildings, setAllBuildings] = useState<Building[]>([]); // Store ALL buildings
+  const [buildings, setBuildings] = useState<Building[]>([]); // Store filtered buildings
   const [campusBoundary, setCampusBoundary] = useState<CampusBoundary | null>(null);
   
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -43,9 +44,14 @@ export default function Home() {
 
     const fetchData = async () => {
       try {
-        const [cats, bound] = await Promise.all([getCategories(), getCampusBoundary()]);
+        const [cats, bound, allB] = await Promise.all([
+          getCategories(), 
+          getCampusBoundary(),
+          getBuildings() // Fetch ALL buildings once
+        ]);
         setCategories(cats);
-        // ... rest of existing code
+        setAllBuildings(allB);
+        setBuildings(allB); // Init filtered with all
         setCampusBoundary(bound);
       } catch (e) {
         console.error("Failed to load init data", e);
@@ -62,7 +68,24 @@ export default function Home() {
       if (router) router.push('/');
   };
   
-  // Fetch Buildings when filters change
+  // Client-side filtering
+  useEffect(() => {
+    let result = allBuildings;
+    
+    if (selectedCategory) {
+      result = result.filter(b => b.category?.slug === selectedCategory);
+    }
+    
+    if (searchQuery) {
+      const lowerQ = searchQuery.toLowerCase();
+      result = result.filter(b => b.name.toLowerCase().includes(lowerQ));
+    }
+    
+    setBuildings(result);
+  }, [selectedCategory, searchQuery, allBuildings]);
+
+/*
+  // Fetch Buildings when filters change -- REMOVED in favor of client-side filtering
   useEffect(() => {
     const fetchBuildings = async () => {
       setError(null);
@@ -76,6 +99,7 @@ export default function Home() {
     };
     fetchBuildings();
   }, [selectedCategory, searchQuery]);
+*/
 
   const handleNavigate = async (mode: 'driving' | 'walking' | 'cycling' = 'driving') => {
     if (!selectedBuilding) return;
@@ -159,7 +183,15 @@ export default function Home() {
         </div>
         
         <div className="p-4 flex flex-col h-full overflow-hidden">
-            <SearchBox onSearch={setSearchQuery} />
+            <SearchBox 
+                buildings={allBuildings} 
+                onSearch={setSearchQuery} 
+                onSelectResult={(b) => {
+                    setSelectedBuilding(b);
+                    setSearchQuery(b.name);
+                    if (window.innerWidth < 640) setIsSidebarOpen(false);
+                }}
+            />
             <FiltersBar 
                 categories={categories} 
                 selectedCategory={selectedCategory} 
