@@ -9,6 +9,15 @@ const API = axios.create({
   },
 });
 
+// Add a request interceptor to include the auth token
+API.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 export const getCategories = async (): Promise<Category[]> => {
   const { data } = await API.get('/categories');
   return data;
@@ -21,6 +30,20 @@ export const getBuildings = async (category?: string, search?: string): Promise<
   
   const { data } = await API.get('/buildings', { params });
   return data;
+};
+
+export const createBuilding = async (buildingData: any): Promise<Building> => {
+    const { data } = await API.post('/buildings', buildingData);
+    return data;
+};
+
+export const updateBuilding = async (id: number, buildingData: any): Promise<Building> => {
+    const { data } = await API.put(`/buildings/${id}`, buildingData);
+    return data;
+};
+
+export const deleteBuilding = async (id: number): Promise<void> => {
+    await API.delete(`/buildings/${id}`);
 };
 
 export const getBuildingDetails = async (id: number): Promise<Building> => {
@@ -42,3 +65,15 @@ export const getRoute = async (from: [number, number], to: [number, number]): Pr
   });
   return data;
 };
+
+export const getDashboardStats = async () => {
+  const { data } = await API.get('/stats');
+  return data;
+};
+
+export const getUsers = async () => {
+  const { data } = await API.get('/users');
+  return data;
+};
+
+

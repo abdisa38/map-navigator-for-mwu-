@@ -32,4 +32,46 @@ class BuildingController extends Controller
         $building = Building::with('category')->findOrFail($id);
         return response()->json($building);
     }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+            'description' => 'nullable|string',
+            'image_url' => 'nullable|string',
+        ]);
+
+        $building = Building::create($request->all());
+
+        return response()->json($building, 201);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $building = Building::findOrFail($id);
+
+        $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'category_id' => 'sometimes|required|exists:categories,id',
+            'latitude' => 'sometimes|required|numeric',
+            'longitude' => 'sometimes|required|numeric',
+            'description' => 'nullable|string',
+            'image_url' => 'nullable|string',
+        ]);
+
+        $building->update($request->all());
+
+        return response()->json($building);
+    }
+
+    public function destroy($id)
+    {
+        $building = Building::findOrFail($id);
+        $building->delete();
+
+        return response()->json(['message' => 'Building deleted successfully']);
+    }
 }

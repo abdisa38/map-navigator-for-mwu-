@@ -6,6 +6,9 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\BuildingController;
 use App\Http\Controllers\Api\CampusBoundaryController;
 use App\Http\Controllers\Api\RouteController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,8 +21,22 @@ use App\Http\Controllers\Api\RouteController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+// Auth Routes
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', [AuthController::class, 'me']);
+    
+    // Admin Routes
+    Route::middleware('can:admin')->group(function () {
+        Route::get('/stats', [DashboardController::class, 'stats']);
+        Route::get('/users', [UserController::class, 'index']);
+        Route::post('/buildings', [BuildingController::class, 'store']);
+        Route::put('/buildings/{id}', [BuildingController::class, 'update']);
+        Route::delete('/buildings/{id}', [BuildingController::class, 'destroy']);
+    });
 });
 
 // Public Routes for App

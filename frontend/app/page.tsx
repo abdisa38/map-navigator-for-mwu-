@@ -1,175 +1,40 @@
-'use client';
+import Link from "next/link";
 
-import React, { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
-import { getCategories, getBuildings, getCampusBoundary, getRoute } from '@/lib/api';
-import { Category, Building, CampusBoundary } from '@/lib/types';
-import FiltersBar from '@/components/UI/FiltersBar';
-import SearchBox from '@/components/UI/SearchBox';
-import BuildingList from '@/components/UI/BuildingList';
-import BuildingDetails from '@/components/UI/BuildingDetails';
-import clsx from 'clsx';
-import { Menu, ChevronLeft } from 'lucide-react';
-
-// Dynamic import for Leaflet map (SSO false)
-const MapView = dynamic(() => import('@/components/Map/MapView'), {
-  ssr: false,
-  loading: () => <div className="h-full w-full flex items-center justify-center bg-gray-100">Loading Map...</div>
-});
-
-export default function Home() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [buildings, setBuildings] = useState<Building[]>([]);
-  const [campusBoundary, setCampusBoundary] = useState<CampusBoundary | null>(null);
-  
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  
-  const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [routeGeoJSON, setRouteGeoJSON] = useState<any | null>(null);
-  const [isNavigating, setIsNavigating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Initial Load
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [cats, bound] = await Promise.all([getCategories(), getCampusBoundary()]);
-        setCategories(cats);
-        setCampusBoundary(bound);
-      } catch (e) {
-        console.error("Failed to load init data", e);
-        setError("Failed to load initial data. Check backend connection.");
-      }
-    };
-    fetchData();
-  }, []);
-
-  // Fetch Buildings when filters change
-  useEffect(() => {
-    const fetchBuildings = async () => {
-      setError(null);
-      try {
-        const data = await getBuildings(selectedCategory || undefined, searchQuery);
-        setBuildings(data);
-      } catch (e) {
-        console.error(e);
-        setError("Failed to fetch buildings. Ensure backend is running.");
-      }
-    };
-    fetchBuildings();
-  }, [selectedCategory, searchQuery]);
-
-  const handleNavigate = async () => {
-    if (!selectedBuilding) return;
-    
-    setIsNavigating(true);
-    
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
-      setIsNavigating(false);
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          // In real OSRM, we need start and end points
-          const response = await getRoute(
-             [latitude, longitude], 
-             [selectedBuilding.latitude, selectedBuilding.longitude]
-          );
-
-          if (response.routes && response.routes.length > 0) {
-              setRouteGeoJSON(response.routes[0].geometry);
-          } else {
-              alert("No route found");
-          }
-        } catch (error) {
-          console.error("Route error", error);
-          alert("Failed to calculate route");
-        } finally {
-          setIsNavigating(false);
-        }
-      },
-      (error) => {
-        console.error("Geo error", error);
-        alert("Unable to retrieve your location");
-        setIsNavigating(false);
-      }
-    );
-  };
-
+export default function WelcomePage() {
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-white">
-      {/* Sidebar */}
-      <div 
-        className={clsx(
-            "fixed inset-y-0 left-0 index-20 z-20 w-80 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out flex flex-col sm:relative",
-            isSidebarOpen ? "translate-x-0" : "-translate-x-full sm:translate-x-0 sm:w-80"
-        )}
-      >
-        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-            <h1 className="text-xl font-bold text-blue-900">MWU Navigator</h1>
-            <button className="sm:hidden" onClick={() => setIsSidebarOpen(false)}>
-                <ChevronLeft />
-            </button>
+    <div className="flex h-screen flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-blue-700 to-blue-500 text-white">
+      <div className="text-center space-y-8 p-8 max-w-2xl bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20">
+        <h1 className="text-5xl font-extrabold tracking-tight">
+          Welcome to <span className="text-yellow-400">MWU Navigator</span>
+        </h1>
+        <p className="text-xl font-light opacity-90">
+          Navigate the campus with ease. Find your classes, explore buildings, and get directions instantly.
+        </p>
+        
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+          <Link
+            href="/login"
+            className="px-8 py-3 bg-white text-blue-700 font-bold rounded-full hover:bg-gray-100 transform hover:scale-105 transition-all shadow-lg text-center"
+          >
+            Student Login
+          </Link>
+          <Link
+            href="/register"
+            className="px-8 py-3 bg-transparent border-2 border-white text-white font-bold rounded-full hover:bg-white/10 transform hover:scale-105 transition-all shadow-lg text-center"
+          >
+            Join Now
+          </Link>
         </div>
         
-        <div className="p-4 flex flex-col h-full overflow-hidden">
-            <SearchBox onSearch={setSearchQuery} />
-            <FiltersBar 
-                categories={categories} 
-                selectedCategory={selectedCategory} 
-                onSelectCategory={setSelectedCategory} 
-            />
-            <div className="mt-4 flex-1 overflow-hidden flex flex-col">
-                {error ? (
-                  <div className="p-4 mr-4 bg-red-50 text-red-600 text-sm rounded-md border border-red-200">
-                    {error}
-                  </div>
-                ) : (
-                  <BuildingList 
-                      buildings={buildings} 
-                      onSelect={(b) => {
-                          setSelectedBuilding(b);
-                          if (window.innerWidth < 640) setIsSidebarOpen(false);
-                      }}
-                      isLoading={false}
-                  />
-                )}
-            </div>
+        <div className="pt-8 border-t border-white/20">
+           <Link href="/admin/login" className="text-sm font-medium text-blue-200 hover:text-white transition-colors underline decoration-dotted decoration-blue-300 underline-offset-4">
+              Access Admin Portal
+           </Link>
         </div>
       </div>
-
-      {/* Main Content (Map) */}
-      <div className="flex-1 relative h-full">
-        {/* Mobile Toggle */}
-        {!isSidebarOpen && (
-             <button 
-                onClick={() => setIsSidebarOpen(true)}
-                className="absolute top-4 left-4 z-10 bg-white p-2 rounded-md shadow-md sm:hidden"
-             >
-                <Menu />
-             </button>
-        )}
-
-        <MapView 
-            buildings={buildings}
-            selectedBuilding={selectedBuilding}
-            onMarkerClick={setSelectedBuilding}
-            campusBoundary={campusBoundary}
-            routeGeoJSON={routeGeoJSON}
-        />
-        
-        <BuildingDetails 
-            building={selectedBuilding} 
-            onClose={() => setSelectedBuilding(null)}
-            onNavigate={handleNavigate}
-            isNavigating={isNavigating}
-        />
+      
+      <div className="absolute bottom-4 text-xs opacity-60">
+        &copy; {new Date().getFullYear()} MWU Navigator. All rights reserved.
       </div>
     </div>
   );
