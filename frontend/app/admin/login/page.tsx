@@ -65,7 +65,7 @@ export default function AdminLoginPage() {
               type="text"
               value={universityId}
               onChange={(e) => setUniversityId(e.target.value)}
-              className="w-full bg-gray-700 text-white border border-gray-600 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-gray-600 focus:border-blue-500 transition-colors"
+              className="w-full bg-gray-700 text-white placeholder-gray-400 border border-gray-600 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-gray-600 focus:border-blue-500 transition-colors"
               required
             />
           </div>
@@ -78,7 +78,7 @@ export default function AdminLoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-gray-700 text-white border border-gray-600 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-gray-600 focus:border-blue-500 transition-colors"
+              className="w-full bg-gray-700 text-white placeholder-gray-400 border border-gray-600 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-gray-600 focus:border-blue-500 transition-colors"
               required
             />
           </div>
